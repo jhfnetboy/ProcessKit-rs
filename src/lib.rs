@@ -313,6 +313,7 @@ mod limits;
 // `process_info` / `process_is_alive` — the free-standing identity & reuse-safe
 // liveness queries for an arbitrary pid held outside any group. Gated with the
 // `MemberInfo` they return and the `process-control` readers they reuse.
+mod isolated_piped;
 #[cfg(feature = "process-control")]
 mod lookup;
 mod mechanism;
@@ -383,6 +384,7 @@ pub use detached::DetachedChild;
 pub use error::{Error, ErrorKind, ErrorReason, OutputOverflow, Result, TeardownCause};
 pub use group::{ProcessGroup, ProcessGroupOptions};
 pub use io_priority::IoPriority;
+pub use isolated_piped::{IsolatedPipedChild, IsolatedPipedCommand, IsolatedPipes};
 #[cfg(feature = "limits")]
 pub use limits::{LimitEvidence, LimitKind, LimitReason, LimitVerdict, ResourceLimits};
 #[cfg(feature = "process-control")]

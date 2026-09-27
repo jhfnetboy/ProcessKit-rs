@@ -284,6 +284,23 @@ impl ProcessGroup {
         Ok(child)
     }
 
+    #[cfg(windows)]
+    pub(crate) fn spawn_isolated_piped_raw(
+        &self,
+        cmd: &mut Command,
+        env: Option<Vec<(std::ffi::OsString, std::ffi::OsString)>>,
+        opts: &crate::sys::SpawnOptions,
+    ) -> Result<crate::sys::windows_piped::PipedSpawn> {
+        self.job
+            .spawn_isolated_piped(cmd, env, opts)
+            .map_err(|source| {
+                Error::spawn(
+                    cmd.as_std().get_program().to_string_lossy().into_owned(),
+                    source,
+                )
+            })
+    }
+
     /// `spawn_with_options` under a pseudo-terminal (the
     /// [`Command::use_pty`](crate::Command::use_pty) launch path): the child joins
     /// this group exactly as [`spawn_with_options`](Self::spawn_with_options)'s

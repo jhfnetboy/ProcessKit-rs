@@ -398,6 +398,16 @@ impl Job {
         self.0.spawn(cmd, opts)
     }
 
+    #[cfg(windows)]
+    pub(crate) fn spawn_isolated_piped(
+        &self,
+        cmd: &mut Command,
+        env: Option<Vec<(std::ffi::OsString, std::ffi::OsString)>>,
+        opts: &SpawnOptions,
+    ) -> io::Result<windows_piped::PipedSpawn> {
+        windows_piped::spawn(cmd, env, opts, &self.0)
+    }
+
     /// Spawn `cmd` under a pseudo-terminal as a member of this job — the
     /// [`Command::use_pty`](crate::Command::use_pty) backend. Windows receives the
     /// resolved environment for its raw `CreateProcessW` path; Unix keeps the
