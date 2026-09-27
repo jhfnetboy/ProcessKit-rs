@@ -113,7 +113,7 @@ impl IsolatedPipedCommand {
             return Err(invalid("isolated-pipe command fields cannot contain NUL"));
         }
         for (key, value) in self.command.env_overrides() {
-            if key.is_empty() || key.to_string_lossy().contains('=') || bad_nul(key) {
+            if key.is_empty() || key.as_encoded_bytes().contains(&b'=') || bad_nul(key) {
                 return Err(invalid(
                     "environment keys must be non-empty and cannot contain '=' or NUL",
                 ));
@@ -160,8 +160,9 @@ impl ProcessGroup {
     /// # Errors
     ///
     /// Returns [`ErrorReason::Io`](crate::ErrorReason::Io) for invalid command
-    /// fields or pipe setup failures, and [`ErrorReason::Spawn`](crate::ErrorReason::Spawn)
-    /// if the OS refuses the child.
+    /// fields or pre-spawn preparation failures, and
+    /// [`ErrorReason::Spawn`](crate::ErrorReason::Spawn) if the platform launch,
+    /// containment, or Windows native pipe setup fails.
     ///
     /// # Panics
     ///
@@ -268,7 +269,8 @@ mod tests {
 
     #[test]
     fn validates_shape_and_nul_before_spawn() {
-        assert!(IsolatedPipedCommand::new("/bin/cat").validate().is_ok());
+        let executable = std::env::current_exe().unwrap();
+        assert!(IsolatedPipedCommand::new(&executable).validate().is_ok());
         assert!(
             IsolatedPipedCommand::new("relative")
                 .current_dir(std::env::current_dir().unwrap())
@@ -276,28 +278,28 @@ mod tests {
                 .is_err()
         );
         assert!(
-            IsolatedPipedCommand::new("/bin/cat")
+            IsolatedPipedCommand::new(&executable)
                 .current_dir(std::env::current_dir().unwrap())
                 .arg("bad\0arg")
                 .validate()
                 .is_err()
         );
         assert!(
-            IsolatedPipedCommand::new("/bin/cat")
+            IsolatedPipedCommand::new(&executable)
                 .current_dir(std::env::current_dir().unwrap())
                 .env("BAD=KEY", "value")
                 .validate()
                 .is_err()
         );
         assert!(
-            IsolatedPipedCommand::new("/bin/cat")
+            IsolatedPipedCommand::new(&executable)
                 .current_dir(std::env::current_dir().unwrap())
                 .env("", "value")
                 .validate()
                 .is_err()
         );
         assert!(
-            IsolatedPipedCommand::new("/bin/cat")
+            IsolatedPipedCommand::new(&executable)
                 .current_dir(std::env::current_dir().unwrap())
                 .env("KEY", "bad\0value")
                 .validate()
