@@ -222,6 +222,11 @@ pub(crate) mod channel_reader;
 #[allow(dead_code)] // raw spawn consumers can be feature-independent of ConPTY
 pub(crate) mod windows_spawn;
 
+// Isolated three-pipe `CreateProcessW` backend, wired into the runner by PK3.
+#[cfg(windows)]
+#[allow(dead_code)]
+pub(crate) mod windows_piped;
+
 // The opt-in PTY launch backend (`Command::use_pty`): `openpty` (Unix) /
 // `CreatePseudoConsole` ConPTY (Windows) instead of three pipes, wired into the
 // SAME per-platform containment path as `Job::spawn` (K-032). Compiled only with
