@@ -95,13 +95,14 @@ pub(crate) fn spawn(
         ));
     }
 
+    // Acquire before declaring any pipe owners: on every early return or unwind,
+    // those later-declared inheritable handles are dropped before this guard.
+    // Keep the shared lock until their temporary child ends have been closed so
+    // no concurrent ProcessKit launch can inherit them accidentally.
+    let spawn_guard = crate::sys::process_spawn_lock();
     let (stdin_child, stdin) = std::io::pipe()?;
     let (stdout, stdout_child) = std::io::pipe()?;
     let (stderr, stderr_child) = std::io::pipe()?;
-    // Hold the shared spawn lock from the first inheritable-handle mutation
-    // through closing those temporary child ends. Otherwise another ProcessKit
-    // launch could race through CreateProcessW while they are marked inheritable.
-    let spawn_guard = crate::sys::process_spawn_lock();
 
     // std::io::pipe creates non-inheritable handles. Explicitly clear the three
     // parent ends and mark only the child ends so the handle-list contract is
