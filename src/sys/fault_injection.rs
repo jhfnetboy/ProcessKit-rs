@@ -110,6 +110,9 @@ pub(crate) enum Site {
     /// `sys::windows::set_information_job_object`. Target label: the axis name.
     #[cfg(windows)]
     JobObjectSetInformation,
+    /// Windows raw-child containment. Target label: `assign` or `resume`.
+    #[cfg(windows)]
+    RawChildContainment,
     /// POSIX: one `killpg(2)`/`kill(2)` delivery from the process-group backend's
     /// tracked sweep, through `sys::pgroup::deliver_signal`. Target label: the
     /// syscall name.

@@ -766,6 +766,13 @@ impl Job {
             .suspend_lock
             .lock()
             .unwrap_or_else(|poisoned| poisoned.into_inner());
+        #[cfg(test)]
+        if let Some(error) = crate::sys::fault_injection::check(
+            crate::sys::fault_injection::Site::RawChildContainment,
+            "assign",
+        ) {
+            return Err(error);
+        }
         // SAFETY: both handles come from the still-live `CreateProcessW` result;
         // the caller retains ownership and performs complete cleanup on error.
         if unsafe { AssignProcessToJobObject(self.handle, process) } == 0 {
@@ -775,6 +782,13 @@ impl Job {
             && unsafe { SetProcessAffinityMask(process, mask) } == 0
         {
             return Err(io::Error::last_os_error());
+        }
+        #[cfg(test)]
+        if let Some(error) = crate::sys::fault_injection::check(
+            crate::sys::fault_injection::Site::RawChildContainment,
+            "resume",
+        ) {
+            return Err(error);
         }
         resume_thread_handle(primary_thread)?;
 
